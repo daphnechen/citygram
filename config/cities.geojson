@@ -201,6 +201,22 @@
           30.265108
         ]
       }
+    },
+    {
+      "id": "atlanta",
+      "type": "Feature",
+      "properties": {
+        "title": "Atlanta",
+        "background": "atlanta.jpg",
+        "zoom": 11
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+        -84.3880,
+        33.7490
+        ]
+      }
     }
   ]
 }
