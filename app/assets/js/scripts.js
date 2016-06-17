@@ -1,6 +1,7 @@
 $(document).ready(function() {
   app.hookupMap();
   app.hookupSteps();
+  app.hideSteps();
 });
 
 var app = app || {};
@@ -45,6 +46,27 @@ app.hookupMap = function() {
   }
 };
 
+app.hideSteps = function(){
+  app.hideStep2();
+  app.hideStep3();
+}
+
+app.showStep2 = function(){
+  $('#step2').removeClass('hide');
+}
+
+app.showStep3 = function(){
+  $('#step3').removeClass('hide');
+}
+
+app.hideStep2 = function(){
+  $('#step2').addClass('hide');
+}
+
+app.hideStep3 = function(){
+  $('#step3').addClass('hide');
+}
+
 app.hookupSteps = function() {
   $('.startButton').on('click', function() {
     app.scrollToElement($('#step1'));
@@ -61,10 +83,10 @@ app.hookupSteps = function() {
     $('.publisher').removeClass('is-active');
   });
 
-  $('.publisher:not(.soon) .publisher-btn').on('click', function(event) {
+  $('.publisher:not(.soon)').on('click', function(event) {
     $('.publisher').removeClass('selected');
 
-    var $publisher = $(this).parents('.publisher:not(.soon)');
+    var $publisher = $(this);
     $publisher.addClass('selected');
 
     app.setPublisher($publisher);
@@ -80,6 +102,7 @@ app.hookupSteps = function() {
 
     app.scrollToElement($('#step2'));
   });
+
 
   app.handleChannelClick = function(channel, channelBtn) {
     if (channelBtn.hasClass('disabledButton')) {
@@ -171,7 +194,6 @@ app.hookupSteps = function() {
         type: 'Polygon',
         coordinates: [bbox],
       });
-
       // Remove old layers
       if (prevMarker) app.map.removeLayer(prevMarker);
       if (prevCircle) app.map.removeLayer(prevCircle);
@@ -179,6 +201,7 @@ app.hookupSteps = function() {
       // Preserve references to new layers
       prevMarker = L.marker(latlng).addTo(app.map);
       prevCircle = L.circle(latlng, radiusMeters, { color:'#0B377F' }).addTo(app.map);
+
 
       if (app.eventsArePolygons) {
         app.updateEventsForGeometry(app.state.geom, function(events) {
@@ -195,6 +218,8 @@ app.hookupSteps = function() {
         $('#freqAddress').html(address + ' ' + city + ', ' + state);
         $('#freqNum').html(response.events_count + ' citygrams');
       });
+
+      app.showStep3();
 
     });
   };
@@ -239,12 +264,17 @@ app.setPublisher = function($publisher) {
 
   $('.js-dot-legend').css('visibility', app.eventsArePolygons ? 'hidden' : 'visible');
   $('.confirmationType').html($publisher.data('publisher-title'));
+
+  app.showStep2();
 }
 
 app.hyperlink = Autolinker.link;
 
 // Populate events
 app.updateEvents = function(bounds) {
+  // Update Leaflet map size on mobile
+  app.map.invalidateSize();
+
   var mapGeometry = {
     type: 'Polygon',
     coordinates: [[
@@ -293,8 +323,11 @@ app.displayEventMarker = function(event) {
   } else {
     marker = L.circleMarker([geometry.coordinates[1], geometry.coordinates[0]], { radius: 6, color: '#FC442A' })
   }
-  marker.addTo(app.map).bindPopup(html);
-
+  try {
+    marker.addTo(app.map).bindPopup(html);
+  } catch (e) {
+    console.log("Error loading event '", event.title.substr(0, 10), "'", e);
+  }
   app.eventMarkers.addLayer(marker);
   return marker;
 }
@@ -316,7 +349,7 @@ app.scrollToElement = function(el) {
 };
 
 app.geocode = function(address, city, state, callback, context) {
-  var url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(address);
+   var url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(address);
       url += '&components=locality:' + encodeURIComponent(city);
       url += '|administrative_area:' + encodeURIComponent(state);
 
